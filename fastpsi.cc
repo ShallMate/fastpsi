@@ -46,7 +46,7 @@ std::vector<uint128_t> FastPsiRecv(
 
 
   // VOLE
-  const auto codetype = yacl::crypto::CodeType::Silver5;
+  const auto codetype = yacl::crypto::CodeType::ExAcc11;
   std::vector<uint128_t> a(okvssize);
   std::vector<uint128_t> c(okvssize);
   auto volereceiver = std::async([&] {
@@ -95,7 +95,7 @@ std::vector<uint128_t> FastPsiRecv(
 void FastPsiSend(const std::shared_ptr<yacl::link::Context>& ctx,
                  std::vector<uint128_t>& elem_hashes, OKVSBK ourokvs) {
   uint128_t okvssize = ourokvs.getM();
-  const auto codetype = yacl::crypto::CodeType::Silver5;
+  const auto codetype = yacl::crypto::CodeType::ExAcc11;
   std::vector<uint128_t> b(okvssize);
   uint128_t delta = 0;
   auto volesender = std::async([&] {
