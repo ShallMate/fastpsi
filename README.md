@@ -10,7 +10,7 @@ git clone https://github.com/secretflow/yacl.git
 cd yacl/examples/
 git clone https://github.com/ShallMate/fastpsi
 cd ..
-bazel build --linkopt=-ldl
+bazel build --linkopt=-ldl //...
 cd bazel-bin/examples/fastpsi
 ./fastpsi
 ```
