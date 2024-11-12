@@ -24,10 +24,7 @@ std::vector<uint128_t> FastPsiRecv(
     const std::shared_ptr<yacl::link::Context>& ctx,
     std::vector<uint128_t>& elem_hashes, OKVSBK ourokvs);
 
-
-
 void FastPsiSend(const std::shared_ptr<yacl::link::Context>& ctx,
                  std::vector<uint128_t>& elem_hashes, OKVSBK ourokvs);
-
 
 std::vector<uint128_t> CreateRangeItems(size_t begin, size_t size);

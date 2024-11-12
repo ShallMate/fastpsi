@@ -33,5 +33,6 @@ yacl_cc_binary(
         "//yacl/link:test_util",
         "//yacl/utils:platform_utils"
     ],
-    copts = ["-maes", "-mpclmul"],
+    copts = ["-maes", "-mpclmul","-mavx2","-fopenmp","-O3"],
+    linkopts = ["-fopenmp","-O3"]
 )

@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include <future>
 #include <vector>
 
@@ -24,12 +23,6 @@
 
 using namespace yacl::crypto;
 using namespace std;
-
-struct Uint128Hash {
-    size_t operator()(const uint128_t& key) const {
-        return std::hash<uint64_t>()(static_cast<uint64_t>(key)) ^ std::hash<uint64_t>()(static_cast<uint64_t>(key >> 64));
-    }
-};
 
 std::vector<uint128_t> CreateRangeItems(size_t begin, size_t size) {
   std::vector<uint128_t> ret;
@@ -44,7 +37,6 @@ std::vector<uint128_t> FastPsiRecv(
     std::vector<uint128_t>& elem_hashes, OKVSBK ourokvs) {
   uint128_t okvssize = ourokvs.getM();
 
-
   // VOLE
   const auto codetype = yacl::crypto::CodeType::ExAcc11;
   std::vector<uint128_t> a(okvssize);
@@ -57,37 +49,34 @@ std::vector<uint128_t> FastPsiRecv(
   // Encode
   ourokvs.Encode(elem_hashes, elem_hashes);
   std::vector<uint128_t> aprime(okvssize);
+  volereceiver.get();
 
   yacl::parallel_for(0, aprime.size(), [&](int64_t begin, int64_t end) {
     for (int64_t idx = begin; idx < end; ++idx) {
       aprime[idx] = a[idx] ^ ourokvs.p_[idx];
     }
   });
-  volereceiver.get();
-  
+
   ctx->SendAsync(
       ctx->NextRank(),
       yacl::ByteContainerView(aprime.data(), aprime.size() * sizeof(uint128_t)),
       "Send A' = P+A");
   std::vector<uint128_t> receivermasks(elem_hashes.size());
-  ourokvs.DecodeOtherP(elem_hashes, receivermasks,c);
+  ourokvs.DecodeOtherP(elem_hashes, receivermasks, c);
   std::vector<uint128_t> sendermasks(elem_hashes.size());
   auto buf = ctx->Recv(ctx->PrevRank(), "Receive masks of sender");
   YACL_ENFORCE(buf.size() == int64_t(elem_hashes.size() * sizeof(uint128_t)));
   std::memcpy(sendermasks.data(), buf.data(), buf.size());
-
-  unordered_set<uint128_t, Uint128Hash> sender_set(sendermasks.begin(), sendermasks.end());
   std::vector<uint128_t> intersection_elements;
   std::mutex intersection_mutex;
-
-  // 使用 yacl::parallel_for 查找交集并加入结果
-  yacl::parallel_for(0, receivermasks.size(), [&](int64_t begin, int64_t end) {
-      for (int64_t idx = begin; idx < end; ++idx) {
-          if (sender_set.find(receivermasks[idx]) != sender_set.end()) {
-              std::lock_guard<std::mutex> lock(intersection_mutex);
-              intersection_elements.push_back(elem_hashes[idx]);
-          }
+  std::set<uint128_t> seta(receivermasks.begin(), receivermasks.end());
+  yacl::parallel_for(0, sendermasks.size(), [&](int64_t begin, int64_t end) {
+    for (int64_t idx = begin; idx < end; ++idx) {
+      if (seta.count(sendermasks[idx]) != 0) {
+        std::lock_guard<std::mutex> lock(intersection_mutex);
+        intersection_elements.push_back(elem_hashes[idx]);
       }
+    }
   });
   return intersection_elements;
 }
@@ -116,7 +105,7 @@ void FastPsiSend(const std::shared_ptr<yacl::link::Context>& ctx,
     }
   });
   std::vector<uint128_t> sendermasks(elem_hashes.size());
-  ourokvs.DecodeOtherP(elem_hashes, sendermasks,k);
+  ourokvs.DecodeOtherP(elem_hashes, sendermasks, k);
   yacl::parallel_for(0, elem_hashes.size(), [&](int64_t begin, int64_t end) {
     for (int64_t idx = begin; idx < end; ++idx) {
       sendermasks[idx] =
