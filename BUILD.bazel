@@ -1,4 +1,4 @@
-# Copyright 2024 Guowei Ling.
+# Copyright 2026 Guowei Ling.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,20 +19,38 @@ package(default_visibility = ["//visibility:public"])
 yacl_cc_binary(
     name = "fastpsi",
     srcs = [
-        "bokvs.h",
-        "bokvs.cc",
+        "bokvsv2.h",
+        "bokvsv2.cc",
         "fastpsi.h",
         "fastpsi.cc",
         "galois128.h",
         "galois128.cc",
-        "main.cc"
-        
+        "main.cc",
+        "uint.h",
     ],
     deps = [
+        "//yacl/base:int128",
         "//yacl/kernel/algorithms:silent_vole",
         "//yacl/link:test_util",
-        "//yacl/utils:platform_utils"
+        "//yacl/utils:parallel",
+        "//yacl/utils:platform_utils",
     ],
-    copts = ["-maes", "-mpclmul","-mavx2","-fopenmp","-O3"],
-    linkopts = ["-fopenmp","-O3"]
+    copts = [
+        "-std=c++20",
+        "-maes",
+        "-mpclmul",
+        "-mavx2",
+        "-mavx512f",
+        "-mavx512bw",
+        "-mavx512dq",
+        "-fopenmp",
+        "-O3",
+        "-I/usr/local/include",
+    ],
+    linkopts = [
+        "-L/usr/local/lib",
+        "-lcryptoTools",
+        "-fopenmp",
+        "-O3",
+    ],
 )

@@ -1,4 +1,4 @@
-// Copyright 2024 Guowei Ling.
+// Copyright 2026 Guowei Ling.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,16 +15,16 @@
 
 #include <vector>
 
-#include "examples/fastpsi/bokvs.h"
-
+#include "examples/fastpsi/bokvsv2.h"
 #include "yacl/base/int128.h"
 #include "yacl/kernel/algorithms/silent_vole.h"
 
 std::vector<uint128_t> FastPsiRecv(
     const std::shared_ptr<yacl::link::Context>& ctx,
-    std::vector<uint128_t>& elem_hashes, OKVSBK ourokvs);
+    std::vector<uint128_t>& elem_hashes, OKVSBKV2& ourokvs);
 
 void FastPsiSend(const std::shared_ptr<yacl::link::Context>& ctx,
-                 std::vector<uint128_t>& elem_hashes, OKVSBK ourokvs);
+                 std::vector<uint128_t>& elem_hashes,
+                 const OKVSBKV2& ourokvs);
 
 std::vector<uint128_t> CreateRangeItems(size_t begin, size_t size);

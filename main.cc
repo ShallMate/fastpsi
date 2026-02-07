@@ -1,4 +1,4 @@
-// Copyright 2024 Guowei Ling.
+// Copyright 2026 Guowei Ling.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,23 +16,24 @@
 #include <ostream>
 #include <vector>
 
-#include "examples/fastpsi/bokvs.h"
+#include "examples/fastpsi/bokvsv2.h"
 #include "examples/fastpsi/fastpsi.h"
-
 #include "yacl/base/int128.h"
 #include "yacl/link/test_util.h"
 
 int main() {
-  size_t n = 1 << 10;
-  size_t w = 512;
+  size_t n = 1 << 20;
+  size_t w = 360;
   double e = 1.01;
-  OKVSBK ourokvs(n, w, e);
-  auto r = ourokvs.getR();
-  std::cout << "N: " << ourokvs.getN() << std::endl;
-  std::cout << "M: " << ourokvs.getM() << std::endl;
-  std::cout << "W: " << ourokvs.getW() << std::endl;
+
+  OKVSBKV2 okvs_sender(n, w, e);
+  OKVSBKV2 okvs_receiver(n, w, e);
+  auto r = okvs_receiver.getR();
+  std::cout << "N: " << okvs_receiver.getN() << std::endl;
+  std::cout << "M: " << okvs_receiver.getM() << std::endl;
+  std::cout << "W: " << okvs_receiver.getW() << std::endl;
   std::cout << "R: " << r << std::endl;
-  std::cout << "e: " << ourokvs.getE() << std::endl;
+  std::cout << "e: " << okvs_receiver.getE() << std::endl;
 
   yacl::crypto::Prg<uint128_t> prng(yacl::crypto::FastRandU128());
 
@@ -44,15 +45,27 @@ int main() {
   std::vector<uint128_t> items_b = CreateRangeItems(elementstart, n);
 
   auto lctxs = yacl::link::test::SetupWorld(2);  // setup network
+  lctxs[0]->SetRecvTimeout(120000);
+  lctxs[1]->SetRecvTimeout(120000);
+
+  auto start = std::chrono::steady_clock::now();
+
   std::future<void> fastpsi_sender = std::async(
-      std::launch::async, [&] { FastPsiSend(lctxs[0], items_a, ourokvs); });
+      std::launch::async,
+      [&] { FastPsiSend(lctxs[0], items_a, okvs_sender); });
 
   std::future<std::vector<uint128_t>> fastpsi_receiver =
       std::async(std::launch::async,
-                 [&] { return FastPsiRecv(lctxs[1], items_b, ourokvs); });
+                 [&] { return FastPsiRecv(lctxs[1], items_b, okvs_receiver); });
 
   fastpsi_sender.get();
   auto psi_result = fastpsi_receiver.get();
+
+  auto end = std::chrono::steady_clock::now();
+  auto duration =
+      std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+  std::cout << "Fast PSI took " << duration.count() << " ms" << std::endl;
+
   if (psi_result.size() == intersize) {
     std::cout << "The PSI protocol has been successfully executed" << std::endl;
   }
