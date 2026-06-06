@@ -19,21 +19,14 @@ package(default_visibility = ["//visibility:public"])
 yacl_cc_binary(
     name = "fastpsi",
     srcs = [
-        "bokvsv2.h",
         "bokvsv2.cc",
-        "fastpsi.h",
+        "bokvsv2.h",
         "fastpsi.cc",
-        "galois128.h",
+        "fastpsi.h",
         "galois128.cc",
+        "galois128.h",
         "main.cc",
         "uint.h",
-    ],
-    deps = [
-        "//yacl/base:int128",
-        "//yacl/kernel/algorithms:silent_vole",
-        "//yacl/link:test_util",
-        "//yacl/utils:parallel",
-        "//yacl/utils:platform_utils",
     ],
     copts = [
         "-std=c++20",
@@ -45,12 +38,17 @@ yacl_cc_binary(
         "-mavx512dq",
         "-fopenmp",
         "-O3",
-        "-I/usr/local/include",
     ],
     linkopts = [
-        "-L/usr/local/lib",
-        "-lcryptoTools",
         "-fopenmp",
         "-O3",
+    ],
+    deps = [
+        "//yacl/base:int128",
+        "//yacl/kernel/algorithms:silent_vole",
+        "//yacl/link:test_util",
+        "//yacl/utils:parallel",
+        "//yacl/utils:platform_utils",
+        "@com_github_osu_crypto_libote//:all_deps",
     ],
 )
